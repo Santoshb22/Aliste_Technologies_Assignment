@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
+// Async thunk to fetch all products from fakestoreapi
 export const fetchAllProducts = createAsyncThunk("product/fetchAll",
     async (_, thunkApi) => {
         try {
@@ -11,6 +12,7 @@ export const fetchAllProducts = createAsyncThunk("product/fetchAll",
         }
     }
 )
+// Get cached products from localStorage or empty array
 const allProducts = JSON.parse(localStorage.getItem("allProducts")) || [];
 const initialState = {
     productsData: allProducts,

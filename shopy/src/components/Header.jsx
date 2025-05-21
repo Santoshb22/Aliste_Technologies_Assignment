@@ -1,9 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { IoCartOutline } from "react-icons/io5";
-import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom'; // Used for client-side navigation
+import { IoCartOutline } from "react-icons/io5"; // Cart icon from react-icons
+import { useSelector } from 'react-redux'; // To access Redux state
 
 function Header() {
+  // Accessing cart items from Redux store's `cart` slice.
+  // Assumes that cartSlice has a property named `items`
   const cartItems = useSelector(store => store.cart.items);
 
   return (

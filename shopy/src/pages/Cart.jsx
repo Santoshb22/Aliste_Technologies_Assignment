@@ -7,26 +7,34 @@ import { increaseQty, decreaseQty, deleteFromCart } from '../store/cartSlice';
 function Cart() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  // Get cart item IDs and all product data from Redux store
   const cartItems = useSelector(state => state.cart.items);
   const allProducts = useSelector(state => state.products?.productsData || []);
 
+  // Local state to hold full cart product details and total cost
   const [cartProducts, setCartProducts] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
 
+  // Whenever cart or product data changes, update cartProducts and totalAmount
   useEffect(() => {
-    const cartItemIds = cartItems.map(item => item.id);
+    const cartItemIds = cartItems.map(item => item.id); // Get list of item IDs from cart
 
+    // Find full product data that matches cart item IDs
     const matchedProducts = allProducts.filter(product =>
       cartItemIds.includes(product.id)
     );
 
+    // Add quantity info from cart to matched product data
     const matchedProductsWithQty = matchedProducts.map(product => {
       const matchedItem = cartItems.find(item => item.id === product.id);
       return { ...product, qty: matchedItem?.qty || 1 };
     });
 
+    // Update local state with products in the cart
     setCartProducts(matchedProductsWithQty);
 
+    // Calculate total amount
     const total = matchedProductsWithQty.reduce(
       (acc, item) => acc + item.price * item.qty,
       0
@@ -34,20 +42,25 @@ function Cart() {
     setTotalAmount(total);
   }, [allProducts, cartItems]);
 
+ // Handle decreasing item quantity
   const handleDecreaseQty = (id) => {
     dispatch(decreaseQty(id));
   };
 
+  // Handle increasing item quantity
   const handleIncreaseQty = (id) => {
     dispatch(increaseQty(id));
   };
 
+  // Handle removing item from cart
   const handleDelete = (id) => {
     dispatch(deleteFromCart(id));
   };
 
   return (
     <div className="grid md:grid-cols-2 gap-6 p-6 max-w-6xl mx-auto">
+
+      {/* Left Side: List of Cart Items */}
       <div>
         <h2 className="text-xl font-bold mb-4">Cart Items</h2>
         {cartProducts.length === 0 ? (
@@ -59,6 +72,8 @@ function Cart() {
                 key={product.id}
                 className="grid gap-4 items-center bg-gray-100 p-4 rounded-lg"
               >
+
+                {/* Product Image (click to navigate to product details) */}
                 <img
                   onClick={() => navigate(`/product_details/${product.id}`)}
                   src={product.image}
@@ -69,6 +84,8 @@ function Cart() {
                   <h3 className="font-semibold">{product.title}</h3>
                   <p className="text-green-600 font-medium">${product.price}</p>
                 </div>
+
+                {/* Quantity Controls */}
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleDecreaseQty(product.id)}
@@ -96,10 +113,13 @@ function Cart() {
         )}
       </div>
 
+      {/* Right Side: Order Summary */}
       <div className="bg-gray-100 p-6 rounded-lg h-fit">
         <h2 className="text-xl font-bold mb-4">Order Summary</h2>
         <div className="text-lg mb-2">Items: {cartProducts.length}</div>
         <div className="text-xl font-semibold">Total: ${totalAmount.toFixed(2)}</div>
+
+       {/* Checkout Button (disabled for now) */}
         <button
           disabled={true}
           className="cursor-not-allowed mt-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
