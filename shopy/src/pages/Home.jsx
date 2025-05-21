@@ -1,46 +1,45 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from "react-redux";
 import ItemCard from '../components/ItemCard';
+import { fetchAllProducts } from '../store/productsSlice';
 
 function Home() {
-    const [productsData, setProductsData] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+  // Accessing state values from Redux store
+  const { productsData, error, loading } = useSelector(store => store.products);
+  const dispatch = useDispatch();
 
-    const fetchProducts = async () => {
-        try {
-            setError(null);
-            setLoading(true);
-            const res = await fetch("https://fakestoreapi.com/products");
-            const data = await res.json();
-            console.log(data);
-            setProductsData(data);
-        } catch (error) {
-            setError("Error loading products")
-            console.log("Error:", error);
-        } finally {
-            setLoading(false);
-        }
+  // Fetch all products only once when component mounts
+  useEffect(() => {
+    if (productsData.length === 0) {
+      dispatch(fetchAllProducts());
     }
+  }, []);
 
-    useEffect(() => {
-        fetchProducts();
-    }, []);
   return (
-    <div className='grid grid-cols-6'>
-        {
-            loading? ("loading...") 
-            : (
-                productsData.length > 0? (
-                    productsData.map(data => <ItemCard key={data.id} data={data}/>)
-                ) : (
-                    <h1>
-                        {error}
-                    </h1>
-                )
-            )
-        }
+    // Responsive grid layout: 1 to 6 columns depending on screen size
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 px-4 py-6">
+      
+      {/* Loading state message */}
+      {loading && <p className="col-span-full text-center">Loading...</p>}
+
+      {/* Error state message */}
+      {!loading && error && (
+        <p className="col-span-full text-center text-red-500">{error}</p>
+      )}
+
+      {/* No products found message */}
+      {!loading && !error && productsData.length === 0 && (
+        <p className="col-span-full text-center">No products found</p>
+      )}
+
+      {/* Render each product using ItemCard component */}
+      {!loading && !error && productsData.length > 0 &&
+        productsData.map((data) => (
+          <ItemCard key={data.id} data={data} />
+        ))
+      }
     </div>
-  )
+  );
 }
 
-export default Home
+export default Home;
