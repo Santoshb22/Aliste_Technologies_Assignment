@@ -3,7 +3,7 @@ import Home from "./pages/Home";
 import Cart from "./pages/Cart";
 import ProductDetail from "./pages/ProductDetail";
 import Header from "./components/Header";
-
+import "./app.css"
 
 function App() {
 

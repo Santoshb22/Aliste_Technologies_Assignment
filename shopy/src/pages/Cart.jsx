@@ -1,60 +1,53 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router';
+import { MdDeleteOutline } from "react-icons/md";
+import { increaseQty, decreaseQty, deleteFromCart } from '../store/cartSlice';
 
 function Cart() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const cartItems = useSelector(state => state.cart.items);
+  const allProducts = useSelector(state => state.products?.productsData || []);
+
   const [cartProducts, setCartProducts] = useState([]);
-  const allProducts = useSelector((store) => store.products?.productsData);
   const [totalAmount, setTotalAmount] = useState(0);
-  const [cartTrigger, setCartTrigger] = useState(false); // to re-trigger useEffect
-  const navigate  = useNavigate();
-
-
-  const cartItemIds = JSON.parse(localStorage.getItem("cartItems")) || [];
-
-  const handleDecreaseQty = (id) => {
-    const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
-    const updatedCart = cartItems.map(item =>
-       item.id === id
-       ?{...item, qty: item.qty > 1? item.qty - 1 : 1} : item)
-
-    localStorage.setItem("cartItems", JSON.stringify(updatedCart));
-    setCartTrigger(!cartTrigger); 
-  }
-
-  const handleIncreaseQty = (id) => {
-    const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
-    const updatedCart = cartItems.map(item =>
-      item.id === id
-        ? { ...item, qty: item.qty + 1 }
-        : item
-    );
-    localStorage.setItem("cartItems", JSON.stringify(updatedCart));
-    setCartTrigger(!cartTrigger); 
-  };
 
   useEffect(() => {
-  const cartItemIdList = cartItemIds.map(item => item.id);
+    const cartItemIds = cartItems.map(item => item.id);
 
-  const matchedProducts = allProducts.filter(product =>
-    cartItemIdList.includes(product.id)
-  );
+    const matchedProducts = allProducts.filter(product =>
+      cartItemIds.includes(product.id)
+    );
 
-  const matchedProductsWithQty = matchedProducts.map(product => {
-    const matchedItem = cartItemIds.find(item => item.id === product.id);
-    return { ...product, qty: matchedItem?.qty || 1 };
-  });
+    const matchedProductsWithQty = matchedProducts.map(product => {
+      const matchedItem = cartItems.find(item => item.id === product.id);
+      return { ...product, qty: matchedItem?.qty || 1 };
+    });
 
-  setCartProducts(matchedProductsWithQty);
+    setCartProducts(matchedProductsWithQty);
 
-  const total = matchedProductsWithQty.reduce((acc, item) => acc + item.price * item.qty, 0);
-  setTotalAmount(total);
-}, [allProducts, cartTrigger]);
+    const total = matchedProductsWithQty.reduce(
+      (acc, item) => acc + item.price * item.qty,
+      0
+    );
+    setTotalAmount(total);
+  }, [allProducts, cartItems]);
+
+  const handleDecreaseQty = (id) => {
+    dispatch(decreaseQty(id));
+  };
+
+  const handleIncreaseQty = (id) => {
+    dispatch(increaseQty(id));
+  };
+
+  const handleDelete = (id) => {
+    dispatch(deleteFromCart(id));
+  };
 
   return (
     <div className="grid md:grid-cols-2 gap-6 p-6 max-w-6xl mx-auto">
-      
-      {/* Left: List of Cart Items */}
       <div>
         <h2 className="text-xl font-bold mb-4">Cart Items</h2>
         {cartProducts.length === 0 ? (
@@ -62,12 +55,16 @@ function Cart() {
         ) : (
           <ul className="space-y-4">
             {cartProducts.map(product => (
-              <li 
-              key={product.id} 
-              className="grid gap-4 items-center bg-gray-100 p-4 rounded-lg">
+              <li
+                key={product.id}
+                className="grid gap-4 items-center bg-gray-100 p-4 rounded-lg"
+              >
                 <img
-                onClick={() => navigate(`/product_details/${product.id}`)}
-                src={product.image} alt={product.title} className="w-20 h-20 object-contain" />
+                  onClick={() => navigate(`/product_details/${product.id}`)}
+                  src={product.image}
+                  alt={product.title}
+                  className="w-20 h-20 object-contain cursor-pointer"
+                />
                 <div>
                   <h3 className="font-semibold">{product.title}</h3>
                   <p className="text-green-600 font-medium">${product.price}</p>
@@ -86,6 +83,12 @@ function Cart() {
                   >
                     +
                   </button>
+                  <button
+                    onClick={() => handleDelete(product.id)}
+                    className="w-8 h-8 rounded-full bg-red-300 hover:bg-red-400 text-xl font-bold flex items-center justify-center"
+                  >
+                    <MdDeleteOutline />
+                  </button>
                 </div>
               </li>
             ))}
@@ -93,13 +96,14 @@ function Cart() {
         )}
       </div>
 
-      {/* Right: Amount Summary */}
       <div className="bg-gray-100 p-6 rounded-lg h-fit">
         <h2 className="text-xl font-bold mb-4">Order Summary</h2>
         <div className="text-lg mb-2">Items: {cartProducts.length}</div>
         <div className="text-xl font-semibold">Total: ${totalAmount.toFixed(2)}</div>
-        <button disabled = {true}
-        className="cursor-not-allowed mt-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+        <button
+          disabled={true}
+          className="cursor-not-allowed mt-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+        >
           Proceed to Checkout
         </button>
       </div>

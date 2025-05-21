@@ -1,43 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import { fetchProductDetailsById } from '../store/productDetailsSlice';
+import { addOrRemoveItem } from '../store/cartSlice';
 
 function ProductDetail() {
   const { productDetails, loading, error } = useSelector(store => store.productDetails);
   const [buttonText, setButtonText] = useState("Add to cart");
   const { id } = useParams();
+  const cartItems = useSelector(store => store.cart.items);
   const dispatch = useDispatch();
-
-  const addToCartOrRemove = (id) => {
-    let existingItems = JSON.parse(localStorage.getItem("cartItems")) || [];
-
-    const isInCart = existingItems.find(item => item.id === id);
-
-    if(!isInCart) {
-      existingItems.push({id, qty: 1});
-      localStorage.setItem("cartItems", JSON.stringify(existingItems));
-      setButtonText("Remove")
-    }else {
-      const cartItems = existingItems.filter(item => item.id !== id);
-      existingItems = cartItems;
-      localStorage.setItem("cartItems", JSON.stringify(existingItems));
-      alert("Product Removed from cart")
-      setButtonText("Add to cart")
-    }
-  }
 
   useEffect(() => {
     if (!productDetails?.id || productDetails?.id !== Number(id)) {
       dispatch(fetchProductDetailsById(id));
     }
-  }, [id, dispatch]);
+  }, [id]);
 
   useEffect(() => {
-    const existingCartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
-    const isInCart = existingCartItems.find(item => item.id === Number(id));
+    const isInCart = cartItems.find(item => item?.id === Number(id));
     setButtonText(isInCart ? "Remove" : "Add to cart");
-  }, [id, buttonText])
+  }, [id, cartItems])
 
   if (loading) return <p className="text-center mt-8">Loading...</p>;
   if (error) return <p className="text-center mt-8 text-red-500">{error}</p>;
@@ -56,11 +39,11 @@ function ProductDetail() {
         </div>
         <div className="text-yellow-500 text-sm">
           <span className="font-bold">{productDetails.rating?.rate}★</span>
-          <span className="text-gray-600 ml-1">({productDetails.rating?.count} reviews)</span>
+          <span className="text-gray-600 ml-1">Rated by {productDetails.rating?.count} people</span>
         </div>
         <button 
-        onClick={() => addToCartOrRemove(productDetails.id)}
-        className={`mt-4 px-6 py-2 ${buttonText === "Add to cart"? "bg-blue-600" : "bg-red-600"} text-white rounded ${buttonText === "Add to cart"? "hover:bg-blue-700" : "hover:bg-red-700"} w-max`}>
+        onClick={() => dispatch(addOrRemoveItem(productDetails.id))}
+        className={`mt-4 px-6 py-2 cursor-pointer ${buttonText === "Add to cart"? "bg-blue-600" : "bg-red-600"} text-white rounded ${buttonText === "Add to cart"? "hover:bg-blue-700" : "hover:bg-red-700"} w-max`}>
           {buttonText}
         </button>
       </div>
